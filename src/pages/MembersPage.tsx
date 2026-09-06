@@ -183,10 +183,10 @@ export const MembersPage: React.FC = () => {
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
+        const data = XLSX.utils.sheet_to_json<Record<string, string>>(ws);
 
         // Map data to CommitteeMember format
-        const parsedMembers: Partial<CommitteeMember>[] = data.map((row: any, idx) => ({
+        const parsedMembers: Partial<CommitteeMember>[] = data.map((row: Record<string, string>, idx) => ({
           memberCode: row['รหัสสมาชิก'] || `MCU-IMP-${idx + 1}`,
           committeeRole: row['ประเภทกรรมการ'] || 'กรรมการสภามหาวิทยาลัย',
           hasQuorumRights: row['สิทธิ์นับองค์'] === 'ไม่มี' ? false : true,

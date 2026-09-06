@@ -281,7 +281,7 @@ export const exportReportToPdf = (options: ReportExportOptions) => {
     margin: { left: 14, right: 14 }
   });
 
-  const finalY = (doc as any).lastAutoTable?.finalY || currentY + 40;
+  const finalY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY || currentY + 40;
 
   // Optional Notes or Summary Section
   let noteY = finalY + 8;
@@ -321,7 +321,7 @@ export const exportReportToPdf = (options: ReportExportOptions) => {
   doc.text('Secretary to MCU University Council', rightX, signY + 10, { align: 'center' });
 
   // Footer page numbering
-  const pageCount = (doc.internal as any).getNumberOfPages();
+  const pageCount = (doc.internal as unknown as { getNumberOfPages: () => number }).getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(7.5);
@@ -335,6 +335,6 @@ export const exportReportToPdf = (options: ReportExportOptions) => {
   }
 
   // Save the PDF
-  const safeFilename = `MCU_Report_${title.replace(/[\s\(\)\/]/g, '_')}_${Date.now()}.pdf`;
+  const safeFilename = `MCU_Report_${title.replace(/[\s()/]/g, '_')}_${Date.now()}.pdf`;
   doc.save(safeFilename);
 };

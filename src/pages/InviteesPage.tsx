@@ -23,6 +23,7 @@ import {
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import * as XLSX from 'xlsx';
+import { MeetingInvitee } from '../types';
 
 export const InviteesPage: React.FC = () => {
   const { invitees, meetings, sendMeetingReminders } = useData();
@@ -33,7 +34,7 @@ export const InviteesPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('all');
 
   // Share / QR Modal State
-  const [selectedInvitee, setSelectedInvitee] = useState<any | null>(null);
+  const [selectedInvitee, setSelectedInvitee] = useState<MeetingInvitee | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const filtered = invitees.filter(inv => {
@@ -58,7 +59,7 @@ export const InviteesPage: React.FC = () => {
   };
 
   // Copy Full Invitation Message for LINE / Chat
-  const handleCopyInvitationMessage = (inv: any) => {
+  const handleCopyInvitationMessage = (inv: MeetingInvitee) => {
     const m = meetings.find(item => item.id === inv.meetingId);
     const url = `${window.location.origin}/rsvp/${inv.personalToken}`;
     const messageText = `นมัสการ / เรียน ${inv.title}${inv.firstName} ${inv.lastName}
