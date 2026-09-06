@@ -25,8 +25,10 @@ import {
   LogOut,
   LogIn
 } from 'lucide-react';
-import { QuorumRuleType, AttendanceFormat, CheckInMethod } from '../types';
+import { QuorumRuleType, AttendanceFormat, CheckInMethod, MeetingInvitee } from '../types';
 import { exportReportToPdf } from '../utils/pdfExport';
+import { calculateQuorum } from '../utils/quorum';
+import { CameraQrScanner } from '../components/attendance/CameraQrScanner';
 
 export const AttendancePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -55,13 +57,12 @@ export const AttendancePage: React.FC = () => {
   const [requiresChairperson, setRequiresChairperson] = useState(true);
 
   // Manual Check-in Modal
-  const [manualCheckInTarget, setManualCheckInTarget] = useState<any | null>(null);
+  const [manualCheckInTarget, setManualCheckInTarget] = useState<MeetingInvitee | null>(null);
   const [checkInFormat, setCheckInFormat] = useState<AttendanceFormat>('Onsite');
   const [checkInNotes, setCheckInNotes] = useState('');
 
-  // QR Scanner Simulation Modal
+  // QR Scanner Modal
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [scannedCodeInput, setScannedCodeInput] = useState('');
 
   // Certify Quorum Modal
   const [isCertifyModalOpen, setIsCertifyModalOpen] = useState(false);
@@ -81,16 +82,6 @@ export const AttendancePage: React.FC = () => {
   const activeAttendances = meetingAttendances.filter(a => !a.checkOutTime);
   const quorumAttendedCount = activeAttendances.filter(a => a.countsForQuorum).length;
 
-  // Threshold calculation
-  let minimumRequired = 1;
-  if (quorumRule === 'more_than_half') {
-    minimumRequired = Math.floor(totalEligible / 2) + 1;
-  } else if (quorumRule === 'not_less_than_half') {
-    minimumRequired = Math.ceil(totalEligible / 2);
-  } else if (quorumRule === 'custom_count') {
-    minimumRequired = customThreshold;
-  }
-
   // Chairperson check
   const chairpersonInvitee = meetingInvitees.find(
     i => i.position?.includes('นายกสภา') || i.position?.includes('ประธาน')
@@ -99,8 +90,18 @@ export const AttendancePage: React.FC = () => {
     ? activeAttendances.some(a => a.meetingInviteeId === chairpersonInvitee.id)
     : true;
 
-  const isQuorumReached =
-    quorumAttendedCount >= minimumRequired && (!requiresChairperson || isChairpersonPresent);
+  // Threshold and quorum status via centralized business logic
+  const {
+    minimumRequired,
+    isQuorumReached,
+  } = calculateQuorum({
+    totalEligible,
+    quorumAttendedCount,
+    quorumRule,
+    customThreshold,
+    requiresChairperson,
+    isChairpersonPresent,
+  });
 
   // Stats
   const checkedInOnsite = activeAttendances.filter(a => a.actualFormat === 'Onsite').length;
@@ -148,9 +149,17 @@ export const AttendancePage: React.FC = () => {
     showToast('info', 'บันทึกเวลาออกแล้ว', `เช็กเอาท์: ${name}`);
   };
 
-  // Simulate QR Code Scan
+  // Prepare mock QR codes for quick testing/simulation
+  const mockQrCodes = useMemo(() => {
+    return meetingInvitees.slice(0, 6).map(inv => ({
+      label: `${inv.title}${inv.firstName} ${inv.lastName} (${inv.position})`,
+      code: inv.response?.checkinQrCodeRef || `MCU-RSVP:${currentMeeting.meetingNumber}:${inv.id}`,
+    }));
+  }, [meetingInvitees, currentMeeting.meetingNumber]);
+
+  // Handle QR Code Scan (Camera or manual)
   const handleSimulateQrScan = (codeToScan?: string) => {
-    const code = codeToScan || scannedCodeInput.trim();
+    const code = codeToScan?.trim() || '';
     if (!code) return;
 
     // Find invitee matching code or ref
@@ -176,7 +185,6 @@ export const AttendancePage: React.FC = () => {
         `ยินดีต้อนรับ ${matched.title}${matched.firstName} ${matched.lastName}`
       );
       setIsQrModalOpen(false);
-      setScannedCodeInput('');
     } else {
       showToast('error', 'ไม่พบบัตรเช็กชื่อนี้', 'QR Code ไม่ตรงกับการประชุมนี้');
     }
@@ -662,66 +670,13 @@ export const AttendancePage: React.FC = () => {
         </div>
       </Modal>
 
-      {/* QR Code Scanner Simulation Modal */}
-      <Modal
+      {/* Camera & QR Scanner Modal */}
+      <CameraQrScanner
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
-        title="สแกน QR Code เช็กชื่อหน้าห้องประชุม"
-        description="จำลองการสแกนบัตรเช็กชื่อของกรรมการ"
-      >
-        <div className="space-y-4 text-xs">
-          <div className="p-6 bg-gray-900 text-white rounded-xl text-center flex flex-col items-center justify-center relative overflow-hidden">
-            <Camera className="w-10 h-10 text-mcu-gold animate-bounce mb-2" />
-            <p className="text-xs text-gray-300">นำ QR Code ส่องที่กล้อง หรือเลือกรหัสตัวอย่างด้านล่าง</p>
-            <div className="w-48 h-48 border-2 border-dashed border-[#C8A54B] rounded-xl my-4 flex items-center justify-center">
-              <span className="text-[10px] text-gray-400">กรอบการสแกน</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-semibold text-gray-700 mb-1">
-              หรือระบุรหัสบัตรเช็กชื่อ (Ref Code):
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={scannedCodeInput}
-                onChange={e => setScannedCodeInput(e.target.value)}
-                placeholder="เช่น MCU-CHK-001"
-                className="flex-1 py-2 px-3 border border-gray-300 rounded-lg outline-none font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => handleSimulateQrScan()}
-                className="px-4 py-2 bg-[#4B1F5E] text-white font-semibold rounded-lg"
-              >
-                ตรวจบัตร
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Click Sample QR Codes */}
-          <div className="pt-2 border-t border-gray-100">
-            <div className="text-[11px] text-gray-500 mb-2 font-medium">คลิกทดสอบสแกนด่วน:</div>
-            <div className="space-y-1.5 max-h-40 overflow-y-auto">
-              {meetingInvitees.slice(0, 4).map(inv => (
-                <button
-                  key={inv.id}
-                  onClick={() => handleSimulateQrScan(inv.response?.checkinQrCodeRef || inv.id)}
-                  className="w-full text-left p-2 rounded bg-gray-50 hover:bg-purple-50 border border-gray-200 text-xs flex items-center justify-between"
-                >
-                  <span className="font-semibold text-gray-800">
-                    {inv.title}{inv.firstName} {inv.lastName}
-                  </span>
-                  <span className="font-mono text-[10px] text-mcu-primary font-bold">
-                    {inv.response?.checkinQrCodeRef || 'Scan'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Modal>
+        onScan={(code) => handleSimulateQrScan(code)}
+        mockCodes={mockQrCodes}
+      />
 
       {/* Certify Quorum Modal */}
       <Modal

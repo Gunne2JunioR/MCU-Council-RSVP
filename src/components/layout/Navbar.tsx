@@ -112,14 +112,20 @@ export const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) 
               <span className="font-semibold text-mcu-darkPurple">
                 {roleLabels[currentRole]?.badge || currentRole}
               </span>
+              <span className="text-[9px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-mono font-bold">
+                DEMO
+              </span>
               <ChevronDown className="w-3.5 h-3.5 opacity-60" />
             </button>
 
             {showRoleMenu && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-fadeIn">
-                <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100 flex items-center justify-between">
+                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 flex items-center justify-between">
                   <span>สลับบทบาททดสอบ (RBAC)</span>
                   <Sparkles className="w-3.5 h-3.5 text-mcu-gold" />
+                </div>
+                <div className="px-3 py-1 bg-amber-50/80 text-[10px] text-amber-800 border-b border-amber-100">
+                  สำหรับกรรมการผู้ประเมินระบบเพื่อทดสอบสิทธิ์ 6 บทบาท
                 </div>
                 {(Object.keys(roleLabels) as UserRole[]).map(role => (
                   <button

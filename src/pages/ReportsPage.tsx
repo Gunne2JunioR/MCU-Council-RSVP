@@ -18,7 +18,7 @@ import {
   School
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { exportReportToPdf } from '../utils/pdfExport';
+import { exportReportToPdf, printReportHtml } from '../utils/pdfExport';
 
 export const ReportsPage: React.FC = () => {
   const { meetings, invitees, attendanceLogs, quorumLogs, committeeMembers } = useData();
@@ -222,9 +222,26 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
-  // Print to PDF
+  // Print to PDF with Official Thai Typography
   const handlePrint = () => {
-    window.print();
+    try {
+      const selectedOption = reportOptions.find(o => o.id === selectedReportType);
+      printReportHtml({
+        title: selectedOption?.label || 'รายงานการประชุมสภามหาวิทยาลัย มจร.',
+        meeting: currentMeeting,
+        headers: tableHeaders,
+        data: reportData.map(r => [r.col1, r.col2, r.col3, r.col4, r.col5, r.col6]),
+        summaryNotes: [
+          `ข้อมูล ณ วันที่พิมพ์รายงาน: ${formatThaiDate(new Date().toISOString())}`,
+          'เอกสารนี้สร้างจากระบบตอบรับเข้าร่วมประชุมสภามหาวิทยาลัย มจร. (MCU Council RSVP)',
+          'การรับรององค์ประชุมเป็นไปตามข้อบังคับมหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย'
+        ]
+      });
+      showToast('info', 'กำลังเปิดหน้าต่างพิมพ์รายงานทางการ...');
+    } catch (err) {
+      console.error(err);
+      window.print();
+    }
   };
 
   return (

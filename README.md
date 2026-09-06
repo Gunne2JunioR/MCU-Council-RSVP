@@ -156,7 +156,16 @@ npm run dev
 ```
 ระบบจะเปิดบริการที่ `http://localhost:3000` (หรือ port ที่ Vite กำหนด)
 
-### 3. ตรวจสอบ Type Check และ Build สำหรับ Production
+### 3. รันการทดสอบ Unit Tests แบบอัตโนมัติ (Vitest)
+```bash
+# รัน Unit Tests ทั้งหมด (Quorum Rules, Invariant Validations, Thai Date Conversions)
+npm test
+
+# รันในโหมด Watch สำหรับการพัฒนา
+npm run test:watch
+```
+
+### 4. ตรวจสอบ Type Check และ Build สำหรับ Production
 ```bash
 npm run build
 ```

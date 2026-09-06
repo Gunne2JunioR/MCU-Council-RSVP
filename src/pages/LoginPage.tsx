@@ -202,9 +202,14 @@ export const LoginPage: React.FC = () => {
 
           {/* Quick Demo Switcher for Evaluation */}
           <div className="mt-6 pt-5 border-t border-gray-100">
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 mb-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-mcu-gold" />
-              <span>คลิกทดสอบด่วนตามบทบาท (Quick Demo Roles):</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-gray-500">
+                <ShieldCheck className="w-3.5 h-3.5 text-mcu-gold" />
+                <span>คลิกทดสอบด่วนตามบทบาท (Quick Demo Roles):</span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded font-semibold">
+                Evaluation Mode
+              </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               <button

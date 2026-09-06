@@ -62,6 +62,9 @@
 # รันโหมด Development (Hot Reloading)
 npm run dev
 
+# รันการทดสอบ Unit Tests (Vitest)
+npm test
+
 # ตรวจสอบ Type Check และทดสอบ Build สำหรับ Production
 npm run build
 
